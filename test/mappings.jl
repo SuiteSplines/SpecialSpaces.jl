@@ -1,4 +1,4 @@
-using TensorProductBsplines, AbstractMappings, CartesianProducts
+using TensorProductBsplines, AbstractMappings, CartesianProducts, IgaBase
 
 Ω¹ = Interval(0.0, 1.0)
 Ω² = Ω¹ ⨱ Ω¹
