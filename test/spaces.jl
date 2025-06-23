@@ -1,5 +1,5 @@
 using CartesianProducts, SortedSequences, UnivariateSplines, KroneckerProducts
-using LinearAlgebra
+using LinearAlgebra, IgaBase
 
 Ω¹ = Interval(0.0, 1.0)
 Ω² = Ω¹ ⨱ Ω¹
