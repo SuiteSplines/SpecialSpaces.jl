@@ -12,6 +12,16 @@ SortedSequences = "2f2e3dc8-c2cf-4b7f-b456-36845a1cbdbc"
 TensorProductBsplines = "89f2e70f-f704-4f07-9b81-69bdc44074b1"
 UnivariateSplines = "2552f6ce-f0d6-4ba3-bf39-bb338613ee69"
 
+[compat]
+AbstractMappings = "^0.8.10"
+CartesianProducts = "^0.15.0"
+IgaBase = "^0.8.1"
+KroneckerProducts = "^0.13.0"
+SortedSequences = "^0.6.2"
+TensorProductBsplines = "^0.8.2"
+UnivariateSplines = "^0.14.0"
+julia = "^1.10.0"
+
 [extras]
 CartesianProducts = "ddfd9c64-15e7-45fc-8e16-950f3835cae5"
 KroneckerProducts = "5766f8de-d509-470a-8420-f491b24ab91b"
