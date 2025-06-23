@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+SpecialSpaces = "cc3e65be-d4cb-4562-9ae2-5262579a9956"
