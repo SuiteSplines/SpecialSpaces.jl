@@ -1,14 +1,14 @@
 """
     const Partition{Dim,T} = CartesianProduct{Dim,Tuple{Vararg{T,Dim}},Tuple{Vararg{IncreasingRange{T},Dim}}}
 
-Alias for [`CartesianProduct`](@ref) defining a partition.
+Alias for `CartesianProduct` defining a partition.
 """
 const Partition{Dim,T} = CartesianProduct{Dim,Tuple{Vararg{T,Dim}},Tuple{Vararg{S,Dim}}} where {S<:IncreasingSequence{T}}
 
 """
     const Domain{Dim,T} = CartesianProduct{Dim,Tuple{Vararg{T,Dim}},Tuple{Vararg{Interval{T},Dim}}}
 
-Alias for [`CartesianProduct`](@ref) of [`Interval`](@ref) defining a domain.
+Alias for `CartesianProduct` of [`Interval`](@ref) defining a domain.
 """
 const Domain{Dim,T} = CartesianProduct{Dim,Tuple{Vararg{T,Dim}},Tuple{Vararg{Interval{T},Dim}}}
 
