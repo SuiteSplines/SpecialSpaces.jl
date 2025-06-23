@@ -1,10 +1,10 @@
 """
-    setcoeffs!(f::Field, v::Vector{T}, slice::Base.UnitRange{Int}, k::Int)
+    setcoeffs!(f::M, v::Vector{T}, k::Int=1, slice::Base.UnitRange{Int}=Base.UnitRange(1,length(v))) where {M<:AbstractMapping,T<:Real}
 
-Set coefficients of a field component to a slice of coefficients in a vector.
+Set coefficients of a mapping component to a slice of coefficients in a vector.
 
 # Arguments:
-- `f`: field to set coeffs of
+- `f`: mapping in question
 - `v`: vector with coeffs
 - `slice`: range of indices of vector `v`
 - `k`: component of field `f` 
@@ -15,12 +15,12 @@ function setcoeffs!(f::M, v::Vector{T}, k::Int=1, slice::Base.UnitRange{Int}=Bas
 end
 
 """
-    setcoeffs!(f::Field, scalarspace::S, v::Vector{T})
+    setcoeffs!(f::M, scalarspace::S, v::Vector{T}) where {M<:AbstractMapping,S<:ScalarSplineSpace,T<:Real}
 
-Set coefficients of a field defined on a scalar space.
+Set coefficients of a mapping defined on a scalar space.
 
 # Arguments:
-- `f`: field to set coeffs of
+- `f`: mapping in question
 - `scalarspace`: space
 - `v`: vector with coeffs with length `dim(scalarspace)`
 """
@@ -30,12 +30,12 @@ function setcoeffs!(f::M, scalarspace::S, v::Vector{T}) where {M<:AbstractMappin
 end
 
 """
-    setcoeffs!(f::Field, vectorspace::S, v::Vector{T})
+    setcoeffs!(f::M, vectorspace::S, v::Vector{T}) where {M<:AbstractMapping,S<:VectorSplineSpace,T<:Real}
 
-Set coefficients of a field defined on a vector space.
+Set coefficients of a mapping defined on a vector space.
 
 # Arguments:
-- `f`: field to set coeffs of
+- `f`: mapping in question
 - `vectorspace`: space
 - `v`: vector with coeffs with length `dim(vectorspace)`
 """
@@ -49,10 +49,10 @@ end
 """
     setcoeffs!(f::M, mixedspace::S, field::Symbol, v::Vector{T}) where {M<:AbstractMapping,S<:MixedSplineSpace,T<:Real}
 
-Set coefficients of a field defined on a mixedspace.
+Set coefficients of a mapping defined on a mixedspace.
 
 # Arguments:
-- `f`: field to set coeffs of
+- `f`: mapping in question
 - `mixedspace`: space
 - `field`: space field
 - `v`: vector with coeffs with length `dim(mixedspace)`
@@ -85,23 +85,13 @@ getcoeffs(f::GeometricMapping{<:Any,Codim}) where {Codim} = vcat(ntuple(k -> vie
 
 """
     Field(space::S) where {S<:ScalarSplineSpace}
-
-Construct field on scalar spline space.
-"""
-Field(space::S) where {S<:ScalarSplineSpace} = Field(TensorProductBspline(space))
-
-"""
     Field(space::S) where {S<:VectorSplineSpace}
-
-Construct field on vector spline space.
-"""
-Field(space::S) where {S<:VectorSplineSpace} = Field(TensorProductBspline(space)...)
-
-"""
     Field(space::S, s::Symbol) where {S<:MixedSplineSpace}
 
-Construct field on component `s` of a mixed spline space.
+Construct field on some spline spaces.
 """
+Field(space::S) where {S<:ScalarSplineSpace} = Field(TensorProductBspline(space))
+Field(space::S) where {S<:VectorSplineSpace} = Field(TensorProductBspline(space)...)
 Field(space::S, s::Symbol) where {S<:MixedSplineSpace} = Field(getfield(space, s))
 
 
@@ -114,6 +104,13 @@ function AbstractMappings.process_mapping_input(space::S) where {S<:ScalarSpline
     TensorProductBspline(space)
 end
 
+"""
+    AbstractMappings.GeometricMapping(domain, args::ScalarScalarSpace; orientation::Int=1)
+    AbstractMappings.GeometricMapping(domain, args::VectorSplineSpace; orientation::Int=1)
+    AbstractMappings.GeometricMapping(domain, args::MixedSplineSpace, field::Symbol; orientation::Int=1)
+
+Construct geometric mapping on some spline spaces.
+"""
 function AbstractMappings.GeometricMapping(domain, args::VectorSplineSpace; orientation::Int=1)
     AbstractMappings.GeometricMapping(domain, args...; orientation=orientation)
 end
