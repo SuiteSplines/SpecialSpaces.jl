@@ -13,6 +13,7 @@ using LinearAlgebra, IgaBase
     # init scalar space from degree and partition
     V = ScalarSplineSpace(p₁, Δ)
     @test typeof(V) <: ScalarSplineSpace{2,T}
+    @test numbertype(V) == T
     @test eltype(V) <: SplineSpace{T}
     @test typeof(V[1]) <: SplineSpace{T}
     @test typeof(V[2]) <: SplineSpace{T}
@@ -53,6 +54,14 @@ using LinearAlgebra, IgaBase
     # init scalar space constraints
     C = ScalarSplineSpaceConstraints(W)
     @test typeof(C) <: ScalarSplineSpaceConstraints{2,<:Any}
+
+    # init scalar spline space with constraints
+    left_constraint!(C; dim=1)
+    S₁ = ScalarSplineSpace(2, Δ)
+    S₂ = ScalarSplineSpace(2, Δ, C)
+    dims₁ = dimensions(S₁)
+    dims₂ = dimensions(S₂)
+    @test dims₂ == dims₁ .- (1, 0)
 end
 
 @testset "Vector spline spaces" begin
@@ -83,6 +92,7 @@ end
     # bulk of tests
     @test typeof(V) <: VectorSplineSpace{2,2,T}
     @test eltype(V) <: ScalarSplineSpace{2,T}
+    @test numbertype(V) == T
     @test typeof(V[1]) <: ScalarSplineSpace{2,T}
     @test typeof(V[2]) <: ScalarSplineSpace{2,T}
     @test map(Degree, V[1]) == map(Degree, V₁)
@@ -97,6 +107,7 @@ end
     @test map(Degree, X[2]) == (p₁, p₁)
     @test map(num_elements, X[1]) == map(num_elements, V₁)
     @test map(num_elements, X[2]) == map(num_elements, V₁)
+    @test Partition(V) == Δ
 end
 
 
@@ -136,6 +147,7 @@ end
     dim_V = dimension(S.V)
     dim_Q = dimension(S.Q)
     dim_S = dim_V + dim_Q
+    @test indices(S) == 1:dim_S
 
     @test dimension(S, :V) == dim_V
     @test dimension(S, :Q) == dim_Q
@@ -163,8 +175,12 @@ end
     V₂ = RaviartThomas(p, Δ₂)
 
     # verify space construction
-    @test typeof(V₁) <: RaviartThomas{2,T}
-    @test typeof(V₂) <: RaviartThomas{3,T}
+    @test typeof(V₁) <: RaviartThomas{2,3,T}
+    @test typeof(V₂) <: RaviartThomas{3,4,T}
+    @test numbertype(V₁) == T
+    @test numbertype(V₂) == T
+    @test Partition(V₁) == Δ₁
+    @test Partition(V₂) == Δ₂
 
     @test all(map(Degree, V₁.V[1]) .== (p, p - 1))
     @test all(map(Degree, V₁.V[2]) .== (p-1, p))
@@ -209,8 +225,8 @@ end
     V₂ = TaylorHood(p, Δ₂)
 
     # verify space construction
-    @test typeof(V₁) <: TaylorHood{2,T}
-    @test typeof(V₂) <: TaylorHood{3,T}
+    @test typeof(V₁) <: TaylorHood{2,3,T}
+    @test typeof(V₂) <: TaylorHood{3,4,T}
 
     @test all(map(Degree, V₁.V[1]) .== (p, p))
     @test all(map(Degree, V₁.V[2]) .== (p, p))
@@ -342,4 +358,27 @@ end
 
     @test extraction_operators(th, :V) == (op₁_test, op₂_test)
     @test extraction_operator(th, :Q) == op₃_test
+end
+
+@testset "IterableMixedSplineSpace" begin
+    Δ = Partition(Ω², (4, 5))
+    p = 4
+
+    # construct regular Raviart-Thomas space
+    rt = RaviartThomas(p, Δ)
+
+    # construct iterable version of Raviart-Thomas space
+    irt = IterableMixedSplineSpace((V=rt.V, Q=rt.Q))    
+
+    # bulk of tests
+    @test irt.V == rt.V
+    @test irt.Q == rt.Q
+    @test irt[1] == rt.V
+    @test irt[2] == rt.Q
+    @test dimension.(irt) == [dimension(rt, :V), dimension(rt, :Q)]
+    @test indices(irt) == indices(rt)
+    @test indices(irt, :V) == indices(rt, :V)
+    @test indices(irt, :Q) == indices(rt, :Q)
+    @test dimfunspace(irt) == dimfunspace(rt)
+    @test codimfunspace(irt) == codimfunspace(rt)
 end

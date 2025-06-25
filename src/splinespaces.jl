@@ -23,7 +23,11 @@ function ScalarSplineSpace(degrees::NTuple{Dim,Degree}, partition::Partition{Dim
 end
 
 function ScalarSplineSpace(p::Degree, partition::Partition{Dim,T}) where {Dim,T<:Real}
-    TensorProduct(Δ -> SplineSpace(p, Δ),partition.data)
+    TensorProduct(Δ -> SplineSpace(p, Δ), partition.data)
+end
+
+function ScalarSplineSpace(p::Degree, partition::Partition{Dim,T}, C::ScalarSplineSpaceConstraints{Dim}) where {Dim,T<:Real}
+    TensorProduct((Δ, c) -> SplineSpace(p, Δ; cperiodic=c.periodic, cleft=c.left, cright=c.right), partition.data, C)
 end
 
 function ScalarSplineSpace(S::ScalarSplineSpace{Dim,T}) where {Dim,T<:Real}
@@ -48,6 +52,9 @@ Return the dimension of a [`ScalarSplineSpace`](@ref).
 function IgaBase.dimension(V::ScalarSplineSpace)
     prod(dimensions(V))
 end
+
+dimfunspace(::ScalarSplineSpace{Dim}) where {Dim} = Dim
+codimfunspace(::ScalarSplineSpace) = 1
 
 """
     indices(V::ScalarSplineSpace)
@@ -87,7 +94,7 @@ function extraction_operator(S::ScalarSplineSpace, ::Val{true})
     return kron(reverse(ntuple(d -> S[d].C, length(S)))...)
 end
 
-struct VectorSplineSpace{Dim,Codim,T} <: VectorFunctionSpace{Dim,T}
+struct VectorSplineSpace{Dim,Codim,T} <: VectorFunctionSpace{Dim,Codim,T}
     V::NTuple{Codim,ScalarSplineSpace{Dim,T}}
     function VectorSplineSpace(V::Vararg{ScalarSplineSpace{Dim,T},Codim}) where {Dim,Codim,T}
         @assert all(ntuple(k -> Partition(V[k]) == Partition(V[1]), Codim)) "all space components must be defined on the same partition"
@@ -138,20 +145,83 @@ function VectorSplineSpaceConstraints(::F) where {Dim,Codim,F<:VectorSplineSpace
 end
 
 """
-    abstract type MixedSplineSpace{Dim,T} <: MixedFunctionSpace{Dim,T}
+    Partition(S::VectorSplineSpace)
+
+Return the partition corresponding to a [`VectorSplineSpace`](@ref).
+"""
+function Partition(space::VectorSplineSpace)
+    CartesianProduct(s -> breakpoints(s), space[1])
+end
+
+"""
+    abstract type MixedSplineSpace{Dim,Codim,T} <: MixedFunctionSpace{Dim,Codim,T}
 
 Concrete mixed spaces like [`RaviartThomas`](@ref) subtype this.
 """
-abstract type MixedSplineSpace{Dim,T} <: MixedFunctionSpace{Dim,T} end
+abstract type MixedSplineSpace{Dim,Codim,T} <: MixedFunctionSpace{Dim,Codim,T} end
+
+"""
+    Partition(space::MixedSplineSpace)
+
+Return the partition corresponding to a [`MixedSplineSpace`](@ref).
+"""
+function Partition(space::MixedSplineSpace)
+    Partition(getproperty(space, first(propertynames(space))))
+end
+
+"""
+    struct IterableMixedSplineSpace{Dim,Codim,T} <: MixedSplineSpace{Dim,Codim,T}
+
+A general purpose mixed spline space, which can be constructed from a named tuple
+consisting of scalar and vector spline spaces. Besides the usual interface to mixed
+function spaces, it additionally supports iteration over the collection of spaces.
+
+The supplied spaces must have the same domain dimension, partition and number type.
+"""
+struct IterableMixedSplineSpace{Dim,Codim,T} <: MixedSplineSpace{Dim,Codim,T}
+    data::NamedTuple
+    function IterableMixedSplineSpace(data::NamedTuple)
+        # check that all spaces in data are either scalar or vector spline spaces
+        @assert all(map(typeof, data |> values) .<: Union{ScalarSplineSpace,VectorSplineSpace})
+
+        # inferre number type
+        T = numbertype(data[1])
+
+        # check number types
+        @assert all(map(numbertype, data |> values) .== T)
+
+        # inferre domain dimension
+        Dim = dimfunspace(data[1])
+
+        # check if all have the same domain dimension
+        @assert all(map(dimfunspace, data |> values) .== Dim)
+
+        # check if all have the same partition
+        all(Partition.(data |> values) .== Ref(Partition(data[1])))
+
+        # inferre domain codimension
+        Codim = sum(map(codimfunspace, data))
+
+        # construct
+        new{Dim,Codim,T}(data)
+    end
+end
+
+Base.getproperty(space::IterableMixedSplineSpace, key::Symbol) = key == :data ? getfield(space, key) : getproperty(getfield(space, :data), key)
+Base.propertynames(space::IterableMixedSplineSpace) = propertynames(getfield(space, :data))
+Base.getindex(space::IterableMixedSplineSpace, i::Int) = getindex(getfield(space, :data), i::Int)
+Base.iterate(space::IterableMixedSplineSpace) = iterate(getfield(space, :data))
+Base.iterate(space::IterableMixedSplineSpace, i::Int) = iterate(getfield(space, :data), i)
+Base.length(space::IterableMixedSplineSpace) = length(getfield(space, :data))
 
 
 """
-    struct RaviartThomas{Dim,T} <: MixedSplineSpace{Dim,T}
+    struct RaviartThomas{Dim,Codim,T} <: MixedSplineSpace{Dim,Codim,T}
 
 Structure preserving pair of spline spaces for velocities
 and pressure in two and three dimensions.
 """
-struct RaviartThomas{Dim,T} <: MixedSplineSpace{Dim,T}
+struct RaviartThomas{Dim,Codim,T} <: MixedSplineSpace{Dim,Codim,T}
     V::VectorSplineSpace{Dim,Dim,T}
     Q::ScalarSplineSpace{Dim,T}
     function RaviartThomas(p::Degree, Δ::Partition{2,T}, C::MixedSplineSpaceConstraints{(:V,:Q)}) where {T<:Real}
@@ -159,7 +229,7 @@ struct RaviartThomas{Dim,T} <: MixedSplineSpace{Dim,T}
         V₂ = ScalarSplineSpace((p - 1, p), Δ, C.V[2])
         V = VectorSplineSpace(V₁, V₂)
         Q = ScalarSplineSpace((p - 1, p - 1), Δ, C.Q)
-        new{2,T}(V, Q)
+        new{2,3,T}(V, Q)
     end
     function RaviartThomas(p::Degree, Δ::Partition{3,T}, C::MixedSplineSpaceConstraints{(:V,:Q)}) where {T<:Real}
         V₁ = ScalarSplineSpace((p, p - 1, p - 1), Δ, C.V[1])
@@ -167,7 +237,7 @@ struct RaviartThomas{Dim,T} <: MixedSplineSpace{Dim,T}
         V₃ = ScalarSplineSpace((p - 1, p - 1, p), Δ, C.V[3])
         V = VectorSplineSpace(V₁, V₂, V₃)
         Q = ScalarSplineSpace((p - 1, p - 1, p - 1), Δ, C.Q)
-        new{3,T}(V, Q)
+        new{3,4,T}(V, Q)
     end
 end
 
@@ -198,7 +268,7 @@ end
 An inf-sup stable pair of spline spaces for velocities and pressure
 in two and three dimensions.
 """
-struct TaylorHood{Dim,T} <: MixedSplineSpace{Dim,T}
+struct TaylorHood{Dim,Codim,T} <: MixedSplineSpace{Dim,Codim,T}
     V::VectorSplineSpace{Dim,Dim,T}
     Q::ScalarSplineSpace{Dim,T}
     
@@ -213,14 +283,14 @@ struct TaylorHood{Dim,T} <: MixedSplineSpace{Dim,T}
         p = ntuple(i -> p, Dim)
         V = VectorSplineSpace(ntuple(i -> ScalarSplineSpace(p, Δ, C.V[i]), Dim)...)
         Q = ScalarSplineSpace(p .- 1, Δ, C.Q)
-        new{Dim,T}(V, Q)
+        new{Dim,Dim+1,T}(V, Q)
     end
     function TaylorHood(p::Degree, Δ::Partition{Dim,T}) where {Dim,T<:Real}
         @assert p ≥ 2
         p = ntuple(i -> p, Dim)
         V = VectorSplineSpace(ntuple(i -> ScalarSplineSpace(p, Δ), Dim)...)
         Q = ScalarSplineSpace(p .- 1, Δ)
-        new{Dim,T}(V, Q)
+        new{Dim,Dim+1,T}(V, Q)
     end
 end
 
@@ -229,7 +299,7 @@ end
 
 Construct a constraints container for [`TaylorHood`](@ref).
 """
-function MixedSplineSpaceConstraints(S::TaylorHood{Dim}) where {Dim}
+function MixedSplineSpaceConstraints(S::TaylorHood)
     MixedSplineSpaceConstraints{(:V, :Q)}((VectorSplineSpaceConstraints(S.V), ScalarSplineSpaceConstraints(S.Q)))
 end
 

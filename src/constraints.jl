@@ -1,10 +1,17 @@
 """
+    abstract type SplineSpaceConstraints{T}
+
+Concrete spline space constraints container subtype this.
+"""
+abstract type SplineSpaceConstraints{T} end
+
+"""
     struct UnivariateSplineSpaceConstraints{T}
 
-Container for [`SplineSpace`](@ref) constraints, i.e. `cl`, `cr`, `cp`
+Container for [`SplineSpace`](@ref) constraints, i.e. `cleft`, `cright`, `cperiodic`
 vectors in `SplineSpace` constructor stored as `left`, `right`and `periodic` field.
 """
-struct UnivariateSplineSpaceConstraints{T}
+struct UnivariateSplineSpaceConstraints{T} <: SplineSpaceConstraints{T}
     left::Vector{T}
     right::Vector{T}
     periodic::Vector{T}
@@ -28,7 +35,7 @@ Container for [`ScalarSplineSpace`](@ref) constraints.
 Field `data` stores a tuple of [`UnivariateSplineSpaceConstraints`](@ref)
 for each tensor-product dimension of [`ScalarSplineSpace`](@ref).
 """
-struct ScalarSplineSpaceConstraints{Dim,T}
+struct ScalarSplineSpaceConstraints{Dim,T} <: SplineSpaceConstraints{T}
     data::NTuple{Dim,UnivariateSplineSpaceConstraints{T}}
     function ScalarSplineSpaceConstraints{Dim,T}() where {Dim,T<:Integer}
         new{Dim,T}(ntuple(dim -> UnivariateSplineSpaceConstraints{T}(), Dim))
@@ -84,7 +91,7 @@ Container for [`ScalarSplineSpaceConstraints`](@ref).
 Field `data` stores a tuple of [`ScalarSplineSpaceConstraints`](@ref)
 for each component of [`VectorSplineSpace`](@ref).
 """
-struct VectorSplineSpaceConstraints{Dim,Codim,T}
+struct VectorSplineSpaceConstraints{Dim,Codim,T} <: SplineSpaceConstraints{T}
     data::NTuple{Codim,ScalarSplineSpaceConstraints{Dim,T}}
     function VectorSplineSpaceConstraints{Dim,Codim,T}() where {Dim,Codim,T<:Integer}
         new{Dim,Codim,T}(ntuple(codim -> ScalarSplineSpaceConstraints{Dim,T}(), Codim))
