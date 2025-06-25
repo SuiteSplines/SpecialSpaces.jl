@@ -19,11 +19,11 @@ const ScalarSplineSpace{Dim,T} = TensorProduct{Dim,SplineSpace{T}}
 Base.eltype(::Type{TensorProduct{Dim,SplineSpace{T}}}) where {Dim,T} = SplineSpace{T}
 
 """
-    Partition(S::ScalarSplineSpace{Dimt,T})
+    Partition(S::ScalarSplineSpace)
 
 Return the partition corresponding to a [`ScalarSplineSpace`](@ref).
 """
-function Partition(S::ScalarSplineSpace{Dim,T}) where {Dim,T<:Real}
+function Partition(S::ScalarSplineSpace)
     CartesianProduct(s -> breakpoints(s), S)
 end
 

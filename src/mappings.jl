@@ -98,7 +98,7 @@ Field(space::S, s::Symbol) where {S<:MixedSplineSpace} = Field(getfield(space, s
 import AbstractMappings: n_input_args, process_mapping_input, n_output_args
 
 AbstractMappings.n_input_args(space::S) where {S<:ScalarSplineSpace} = length(space)
-AbstractMappings.n_input_args(space::S) where {Dim,Codim,S<:VectorSplineSpace{Dim,Codim}} = Dim
+#AbstractMappings.n_input_args(space::S) where {Dim,Codim,S<:VectorSplineSpace{Dim,Codim}} = Dim
 
 function AbstractMappings.process_mapping_input(space::S) where {S<:ScalarSplineSpace}
     TensorProductBspline(space)

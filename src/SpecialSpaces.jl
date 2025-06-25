@@ -16,9 +16,10 @@ module SpecialSpaces
 
     export Partition, Domain
     export indices, dimensions
-    export VectorFunctionSpace, MixedFunctionSpace
-    export ScalarSplineSpace, VectorSplineSpace
-    export RaviartThomas, TaylorHood
+    export FunctionSpace, VectorFunctionSpace, MixedFunctionSpace
+    export dimfunspace, codimfunspace
+    export ScalarSplineSpace, VectorSplineSpace, MixedSplineSpace
+    export IterableMixedSplineSpace, RaviartThomas, TaylorHood
     export UnivariateSplineSpaceConstraints
     export ScalarSplineSpaceConstraints
     export VectorSplineSpaceConstraints
