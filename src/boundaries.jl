@@ -8,14 +8,14 @@ Return the boundary number corresponding to boundary `s`.
                             4                 back
                            top                  . . . . . . .
                      . . . . . . . .            . .         . .
-y                    .             .            .   .       .   .
+η                    .             .            .   .       .   .
 .                    .             .            .     . . . . . . .
 .             left   .             .  right     .     .     .     .
 .               1    .             .    2       .     .     .     .
-· · · ·  x           .             .            . . . . . . .     .
+· · · ·  ξ           .             .            . . . . . . .     .
   ·                  . . . . . . . .              .   .       .   .
     ·                    bottom                     . .         . .
-      z                     3                         . . . . . . .
+      ζ                     3                         . . . . . . .
                                                                  front
                                                                    6
 ```
