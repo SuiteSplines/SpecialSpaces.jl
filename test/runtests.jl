@@ -7,6 +7,7 @@ tests = [
     "spaces",
     "splinespaces",
     "mappings",
+    "boundaries",
 ]
 
 @testset "SpecialSpaces" begin

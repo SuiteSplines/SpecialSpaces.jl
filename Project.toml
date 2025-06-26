@@ -1,7 +1,7 @@
 name = "SpecialSpaces"
 uuid = "cc3e65be-d4cb-4562-9ae2-5262579a9956"
 authors = ["Michał Mika <michal@mika.sh>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 AbstractMappings = "7dac2afd-1bf6-47b8-bc94-9dcdcd19d527"
@@ -30,6 +30,8 @@ SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SortedSequences = "2f2e3dc8-c2cf-4b7f-b456-36845a1cbdbc"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 UnivariateSplines = "2552f6ce-f0d6-4ba3-bf39-bb338613ee69"
+AbstractMappings = "7dac2afd-1bf6-47b8-bc94-9dcdcd19d527"
+IgaBase = "9c103fa8-ae55-49f5-92db-ab77803cf2c4"
 
 [targets]
-test = ["Test", "SafeTestsets", "CartesianProducts", "KroneckerProducts", "SortedSequences", "UnivariateSplines", "LinearAlgebra"]
+test = ["Test", "SafeTestsets", "CartesianProducts", "KroneckerProducts", "SortedSequences", "UnivariateSplines", "LinearAlgebra", "AbstractMappings", "IgaBase"]
