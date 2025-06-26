@@ -9,6 +9,7 @@ module SpecialSpaces
     using TensorProductBsplines
 
     include("base.jl")
+    include("boundaries.jl")
     include("constraints.jl")
     include("spaces.jl")
     include("splinespaces.jl")
@@ -26,6 +27,8 @@ module SpecialSpaces
     export MixedSplineSpaceConstraints
     export extraction_operator, extraction_operators
     export left_constraint!, right_constraint!, periodic_constraint!
+    export clamped_constraint!
     export setcoeffs!, getcoeffs
+    export boundary_symbol, boundary_number
 
 end # module
